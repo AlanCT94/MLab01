@@ -1,0 +1,1 @@
+tinytex::install_tinytex()  # R command to install TinyTeX software
