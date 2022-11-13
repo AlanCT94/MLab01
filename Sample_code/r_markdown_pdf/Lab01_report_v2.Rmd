@@ -5,12 +5,13 @@ date: "2022-11-08"
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(comment = "#>",
+                       echo = FALSE)
 ```
 
 ## Assignment 3: logistic regression
 
-```{r data, echo=FALSE, results='hide', message=FALSE}
+```{r data, results='hide', message=FALSE}
 #------------------------------------------------------------------------------#
 #- Set libraries
 #------------------------------------------------------------------------------#
@@ -53,7 +54,7 @@ data <- data_1
 
 Plot of age vs glucose plasma concentration:
 
-```{r 3.1, echo=FALSE}
+```{r 3.1}
 ylim_min <- min(data$glucose_pl)
 ylim_max <- max(data$glucose_pl)
 
@@ -88,7 +89,7 @@ g(\boldsymbol{x}) = \frac{e^{\boldsymbol{\theta}^{T\boldsymbol{x}}}}{1+e^{\bolds
 $$
 Training misclassification error (percent):
 
-```{r, echo=FALSE,message=FALSE}
+```{r, message=FALSE}
 train=data%>%select(glucose_pl,age,diabetes)
 
 m1=glm(diabetes~., train, family = "binomial")
