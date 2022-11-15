@@ -1,0 +1,213 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Assignment 1. Handwritten digit recognition with Knearest neighbors.
+
+1. Import the data into R and divide it into training, validation and test sets
+(50%/25%/25%) by using the partitioning principle specified in the lecture slides. 
+
+```{r}
+## Import the data
+df <- read.csv(file = "optdigits.csv", header = FALSE)
+n <- dim(df)[1]
+n1<- nrow(df) # is the same as above
+
+## Train data 50%
+set.seed(12345)
+id <- sample(1:n, floor(n*0.5))# floor to take round the numbers
+train <- df[id,]
+## Validation data 25%
+id1<- setdiff(1:n, id) # select data that were not selected on the train data
+set.seed(12345)
+id2<- sample(id1, floor(n*0.25))
+validation <- df[id2,]
+
+## Test data
+id3<-setdiff(id1,id2)
+test <- df[id3,]
+
+# Plot distribution
+nt <- nrow(train)
+nv <- nrow(validation)
+nte<- nrow(test)
+
+n_data<- c(Train = nt, Validation= nv, Testing =nte)
+barp<- barplot(n_data, main = "Data density", xlab = "Data set", ylab = "Number of rows",
+        col = c("red", "orange", "yellow"))
+text(barp, 0, round(n_data, 1),cex=1,pos=3)
+dim(train)
+dim(test)
+dim(validation)
+```
+2. Use training data to fit 30-nearest neighbor classifier with function kknn()
+and kernel=”rectangular” from package kknn and estimate
+• Confusion matrices for the training and test data (use table())
+• Misclassification errors for the training and test data
+Comment on the quality of predictions for different digits and on the overall
+prediction quality.
+```{r}
+library(kknn)
+## Fit model with test 
+model_1<- kknn(as.factor(V65)~.,train = train, test = test, k =30, kernel = "rectangular")
+## Fit model with train
+model_2<- kknn(as.factor(V65)~.,train = train, test = train,k=30 ,kernel = "rectangular")
+## Predicted values test
+pred_test<- model_1$fitted.values
+## Predicted values train
+pred_train <- model_2$fitted.values
+## Confusion matrix 
+table(test[,65],pred_test) ## Test
+table(train[,65],pred_train) ## Train
+
+m_test <- mean(test[,65] != pred_test)
+m_train <- mean(train[,65] != pred_train)
+m_test
+m_train
+cat("Missclasification rate is the sum of False positives + False negatives / Total predictions","\n")
+m_test1 <- (sum(test[,65] != pred_test)/length(test[,65]))*100
+m_train1 <- (sum(train[,65]!= pred_train)/length(train[,65]))*100
+m_test1
+m_train1
+```
+3. 
+```{r, echo=FALSE}
+## Take the rows which target is the number 8
+target_train8 <- which(as.factor(train[,65])== 8)
+target_test8 <- which(as.factor(test[,65]) == 8)
+
+## Take the probability values of the prediction model for the number 8
+
+prob8_train <- model_2$prob[target_train8,9]#Train
+prob8_test<- model_1$prob[target_test8,9] #Test
+#We order the indexes we obtain above to take the two lowest and highest
+o<-order(prob8_train)
+## Train prob
+# Lowest
+cat("Lowest","\n")
+prob8_train[50]
+prob8_train[136]
+cat("Highest","\n")
+prob8_train[192]
+prob8_train[203]
+```
+
+```{r}
+
+## Taking the row of the subset of 8's matrix which probability of being an 8 
+## is lowest and highest
+low1 <- train[target_train8[50],]
+low2 <- train[target_train8[136],]
+high1 <- train[target_train8[192],]
+high2 <- train[target_train8[203],]
+
+## Reshaping the rows to matrix and taking the last column which is the target or
+nlow1 <- matrix(as.numeric(low1[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+nlow2 <- matrix(as.numeric(low2[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+nhigh1 <- matrix(as.numeric(high1[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+nhigh2 <- matrix(as.numeric(high2[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+
+##We could have used matrix and then convert the matrix to the transpose matrix
+## Or as we did it, we just set to TRUE the byrow parameter.
+## We do this to have the correct orientation on the heatmap(), otherwise we would 
+## see an infinite shape instead of the 8's.
+
+## Representation of the numbers 8
+heatmap(nlow1, Colv = NA, Rowv = NA)
+heatmap(nlow2, Colv = NA, Rowv = NA)
+heatmap(nhigh1, Colv = NA, Rowv = NA)
+heatmap(nhigh2, Colv = NA, Rowv = NA)
+```
+4.Fit a K-nearest neighbor classifiers to the training data for different values of K =
+1,2, … , 30 
+```{r}
+k <- c(1:30)
+Knn_models <- matrix(0, nrow = 30, ncol = 4)
+colnames(Knn_models) <- c("K","Missclasification rate trainning %",
+                          "Missclasification rate validation %",
+                          "Missclasification rate test %" )
+for (i in k) {
+  # Adding values of K to matrix
+  Knn_models[i,1] <- i
+  # Fit knn models for training and validation data sets with different K <- 1:30
+  Knn_train<- kknn(as.factor(V65)~.,train = train, test = train, k =i,
+                      kernel = "rectangular")
+  knn_validation <- kknn(as.factor(V65)~.,train = train, test = validation,
+                         k =i, kernel = "rectangular")
+  # Extracting predicted values from the fitted models
+  pred_train <- Knn_train$fitted.values
+  pred_validation <- knn_validation$fitted.values
+  
+  # Calculating the Missclacsifications rates
+  ms_train <- (mean(train[,65] != pred_train))*100
+  ms_validation <- (mean(validation[,65] != pred_validation))*100
+ 
+  # Adding Classifications rates % to the matrix
+  Knn_models[i,2] <- ms_train
+  Knn_models[i,3] <- ms_validation
+  #Knn_models[i,4] <- ms_test
+}
+
+```
+```{r}
+plot(k, Knn_models[,2], xlim = rev(range(k)), ylim = c(0,6), col="red", type = "p", 
+     main = "Misclassification error vs K", ylab = "Error %", pch=19)
+points(k,Knn_models[,3], col="blue", pch=19)
+points(30,Knn_models[30,2], col = "red", pch = 19)
+text(30,4,label= round(Knn_models[30,2], digits = 3))
+points(30,Knn_models[30,3], col= "blue", pch = 19)
+text(30,5.7,label= round(Knn_models[30,3], digits = 3))
+legend('bottomleft',inset=0.05,c("Train","Validation"),lty=1,col=c("red",
+                                    "blue"),title="Data")
+
+```
+```{r}
+knn_test <- kknn(as.factor(V65)~.,train = train, test = test,
+                         k =4, kernel = "rectangular")
+pred_test <- knn_test$fitted.values
+ms_test <- (mean(test[,65] != pred_test))*100
+
+#pred_test
+ms_tests <- c(Knn_models[4,2],Knn_models[4,3], ms_test)
+ms_tests
+```
+5. Cross entropy
+
+```{r}
+## Create a matrix to store the K and Cross entropy values
+Knn_models1 <- matrix(0, nrow = 30, ncol = 2)
+colnames(Knn_models) <- c("K","CE")
+## Vector to store the probability of the actual target
+Individual_prob <- c()
+for(i in 1:30){
+  ## Store the K value
+  Knn_models1[i,1]<-i
+  ## Fitting the models
+  knn_validation <- kknn(as.factor(V65)~.,train = train, test = validation,
+                         k =i, kernel = "rectangular")
+  # Probability matrix
+  knn_validation$prob
+ 
+   ## Taking probabilities for the value(number) that is supposed to be 
+  ## Y[target]-column 65 of dataset partition
+  for(j in 1:nrow(knn_validation$prob)){
+    ## If the Y[target] is 8, we took the prob of being 8 of the current[i] row
+    Individual_prob[j] <- knn_validation$prob[j,validation[j,65]+1]
+    }
+  ## Cross entropy calculation/ The 
+  Knn_models1[i,2] <- -mean(log(Individual_prob + 1e-15))
+
+}
+```
+```{r}
+plot(1:30, Knn_models1[,2],xlab = "K", ylab = "Cross entropy", type = "p", pch= 19,
+     main = "Dependence of the validation error on the value of k", col= "orange")
+points(6,Knn_models1[6,2], col="blue", pch=19)
+text(4.7,0.15,label= "K=6")
+legend('topright',inset=0.05,c("K"),lty =1,col=c(
+                                    "blue"),title="Optimal K")
+
+```
+
+
