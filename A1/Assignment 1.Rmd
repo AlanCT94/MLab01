@@ -290,3 +290,14 @@ legend('topright',inset=0.05,c("K"),lty =1,col=c(
                                     "blue"),title="Optimal K")
 ```
 
+
+# *Statement of Contribution*
+
+Assignment 1 was contributed by Alan Cacique.
+Assignment 2 was contributed by Tugce Izci.
+Assignment 3 was contributed by Kerstin Nilsson.
+All three assignments procedures and results were review and discussed before 
+the creation of the final report to ensure the understanding of the subjects of 
+each person of the team. A long side each team member went individually on each 
+assignment.
+
