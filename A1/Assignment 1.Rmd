@@ -1,6 +1,6 @@
 ---
 title: "Computer Lab 1 block 1"
-author: "Kerstin, Tugce and Alan"
+author: "Kerstin, Tugce and Alan(alaca734)"
 date: "2022-11-16"
 output: pdf_document
 ---
@@ -14,7 +14,7 @@ The original data set **"optdigits.csv"** has a dimension of **3823 rows and 65
 columns.** The last column[65] is the target, and represent which number the each
 row is. After dividing the data set with the proportions indicated the number of 
 rows for each sub set are: **Training: 1911, Validation: 955 and Test: 957**.
-```{r,fig.align='center', echo =FALSE}
+```{r,fig.align='center',fig.height = 3, fig.width = 3 , echo =FALSE}
 ## Import the data
 df <- read.csv(file = "optdigits.csv", header = FALSE)
 n <- dim(df)[1]
@@ -73,7 +73,8 @@ prediction is the model fitted with the Training data set and test with the same
 data set. This result is due to the fact that the model is being tested with data
 that it has already "seen", because it was train with it.
 
-```{r, warning=FALSE,echo=FALSE}
+
+```{r, warning=FALSE, fig.height = 2, fig.width = 2 ,echo=FALSE}
 library(kknn)
 ## Fit model with test 
 model_1<- kknn(as.factor(V65)~.,train = train, test = test, k =30, kernel = "rectangular")
@@ -191,7 +192,7 @@ number of K, the model will just identified each observation as only point to co
 while training, so identifies each observation as single case which could lead to over fitting.
 
 
-```{r, echo=FALSE}
+```{r,fig.height = 4, fig.width = 6  ,echo=FALSE}
 k <- c(1:30)
 Knn_models <- matrix(0, nrow = 30, ncol = 4)
 colnames(Knn_models) <- c("K","Missclasification rate trainning %",
