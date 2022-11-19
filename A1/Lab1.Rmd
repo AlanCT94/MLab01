@@ -177,7 +177,7 @@ ms_tests
 ```{r}
 ## Create a matrix to store the K and Cross entropy values
 Knn_models1 <- matrix(0, nrow = 30, ncol = 2)
-colnames(Knn_models) <- c("K","CE")
+colnames(Knn_models1) <- c("K","CE")
 ## Vector to store the probability of the actual target
 Individual_prob <- c()
 for(i in 1:30){

@@ -1,6 +1,6 @@
 ---
 title: "Computer Lab 1 block 1"
-author: "Kerstin, Tugce and Alan(alaca734)"
+author: "Kerstin(kerni714), Tugce() and Alan(alaca734)"
 date: "2022-11-16"
 output: pdf_document
 ---
@@ -61,17 +61,12 @@ $\ MR = \frac{FP+FN}{TotalCases}$
 The Miscclassification Rate of the Training data set is 4.50 %
 The Miscclassification Rate of the Test data set is 5.33 %
 
-From the confusion matrices of Testing and Training data sets, it can be seen that
-for both models the numbers with most prediction errors are the number 1,7 and 9.
-From the Testing confusion matrix the number 0 has 100% of accuracy, with no
-prediction error. In comparison the Training data set has not a 100% of accuracy
-in a number, but the "best" predicted number is the number 5, followed by numbers 
-6 and 0.
+From the confusion matrices of Testing and Training data sets, it can be calculated
+the Missclasification rate for each class. For the Training the numbers 1, 4 and 9.
+For the Testing the numbers 4, 5 and 8, are the ones with highest error.
 
-The Misclasification rate indicates that the model with a better quality of the
-prediction is the model fitted with the Training data set and test with the same
-data set. This result is due to the fact that the model is being tested with data
-that it has already "seen", because it was train with it.
+The Misclasifiation error from training and test are similar which it indicates
+that the model is too simple, but it will not overfit.
 
 
 ```{r, warning=FALSE, fig.height = 2, fig.width = 2 ,echo=FALSE}
@@ -99,6 +94,23 @@ m_train1 <- (sum(train[,65]!= pred_train)/length(train[,65]))*100
 # m_test1
 # m_train1
 ```
+```{r}
+err_train_by_class_perc <- round(100*((rowSums(confusion_matrix_Train)-diag(confusion_matrix_Train))/
+                                       rowSums(confusion_matrix_Train)),2)
+
+names(err_train_by_class_perc) <- 0:9
+
+err_test_by_class_perc <- round(100*((rowSums(confusion_matrix_Test)-diag(confusion_matrix_Test))/
+                                       rowSums(confusion_matrix_Test)),2)
+
+names(err_test_by_class_perc) <- 0:9
+cat("Misclasification rate per class - Train", "\n")
+err_train_by_class_perc
+cat("Misclasification rate per class- Test","\n")
+err_test_by_class_perc
+
+```
+Add the percentage error per class and explain
 
 ### 1.3 Easiest and Hardest cases for digit "8"
 
@@ -124,25 +136,18 @@ o<-order(prob8_train)
 # prob8_train[50]
 # prob8_train[43]
 # prob8_train[136]
-## Easiest
+# # Easiest
 # cat("Easiest","\n")
 # prob8_train[179]
 # prob8_train[183]
 
-HL_Prob8 <- matrix(0, nrow = 3, ncol=4)
-colnames(HL_Prob8) <- c("Index","Hardest %", "Index", "Easiest %")
-HL_Prob8[,1] <- c(50,43,136)
-HL_Prob8[,2] <- c(prob8_train[50],prob8_train[43],prob8_train[136])
-HL_Prob8[,3] <- c(192,203,NA)
-HL_Prob8[,4] <- c(prob8_train[179],prob8_train[183],NA)
-print(HL_Prob8)
 ## Taking the row of the subset of 8's matrix which probability of being an 8 
 ## is lowest and highest
 low1 <- train[target_train8[50],]
 low2 <- train[target_train8[43],]
 low3 <- train[target_train8[136],]
-high1 <- train[target_train8[192],]
-high2 <- train[target_train8[203],]
+high1 <- train[target_train8[179],]
+high2 <- train[target_train8[183],]
 
 ## Reshaping the rows to matrix and taking the last column which is the target or
 nlow1 <- matrix(as.numeric(low1[-65]), nrow = 8, ncol = 8, byrow = TRUE)
@@ -158,38 +163,27 @@ nhigh2 <- matrix(as.numeric(high2[-65]), nrow = 8, ncol = 8, byrow = TRUE)
 
 ## Representation of the numbers 8
 cat("Hardest")
-heatmap(nlow1, Colv = NA, Rowv = NA)
-heatmap(nlow2, Colv = NA, Rowv = NA)
-heatmap(nlow3, Colv = NA, Rowv = NA)
+heatmap(nlow1, Colv = NA, Rowv = NA, main = "Prob 0.10")
+heatmap(nlow2, Colv = NA, Rowv = NA, main = "Prob 0.13")
+heatmap(nlow3, Colv = NA, Rowv = NA, main = "Prob 0.16")
 cat("Easiest")
-heatmap(nhigh1, Colv = NA, Rowv = NA)
-heatmap(nhigh2, Colv = NA, Rowv = NA)
+heatmap(nhigh1, Colv = NA, Rowv = NA, main = "Prob 1")
+heatmap(nhigh2, Colv = NA, Rowv = NA, main = "Prob 1")
 ```
 
 ### 1.4 Model Complexity
 
+ 
+
+The complexity of the models increases as the number of K or numbers nearest neighbors decreases. The optimal K is number 4 because it has the lowest Misclassification Rate. Compare with K equals 3, it has the same error but we chose 4 because it has smaller complexity.
+
+From the plot it can be seen that K equals to 1 and 2, for the training data set,
+resulted in a Misclassification rate equals to 0. For K equals to 1, the model will just identified each observation as only point to consider while training, so identifies each observation as single case which could lead to over fitting.
+
 After training different models changing the value of k= [1:30], with the training
 and validation data. From the plot there is a substantial difference between the
 models, the model train and test with the training data show a smaller Misclassification 
-error than the Validation model. The complexity of the models increases as the n
-umber of K or numbers nearest neighbors decreases.
-The optimal K is 4, because it has to be made a trade off between the complexity 
-of the model and the Misclassification error. In this case K equal to 4 is the
-one with smaller Misclassification rate and without being too small, this means
-a model with less complexity. We want to choose a model with lower complexity
-to avoid overfitting.
-
-Each model is different and could have different type of data; for example
-a model for a health condition is more sensible than one about identifying
-types of rocks. With that said, it could be choose a K bigger depending 
-of how much impact an small increase on the Misclassification rate creates.
-So one could choose a different for the case used in this assignment, an optimal K
-equal to 11, because the error difference against K = 4 is around 1 percent.
-
-From the plot it can be seen that K equals to 1 and 2, for the training data set,
-resulted in a Misclassification rate equals to 0. In this case with an small
-number of K, the model will just identified each observation as only point to consider
-while training, so identifies each observation as single case which could lead to over fitting.
+error than the Validation model.
 
 
 ```{r,fig.height = 4, fig.width = 6  ,echo=FALSE}
@@ -232,9 +226,11 @@ legend('bottomleft',inset=0.05,c("Train","Validation"),lty=1,col=c("red",
 ```
 
 #### 1.4.1 Misclassification error with Test data set, with optimal K
-The error of the model with the Test data set have a similar value to the validation
-model, 2.510%(Test) vs 2.513%(Validation). The result is expected because both
-data sets have a similar amount of data, 955(validation) vs 957(Test).
+
+The  overall Misclassification error of the test data has a similar value to the model
+with the validation data.
+Looking at the error rates per class, we can see that the highst error is 5.5%, which
+could be thought as a good model.
 
 ```{r, echo=FALSE}
 knn_test <- kknn(as.factor(V65)~.,train = train, test = test,
@@ -246,18 +242,24 @@ ms_test <- (mean(test[,65] != pred_test))*100
 options(digits=4)
 ms_tests <- c(round(Knn_models[4,2], digits=2),Knn_models[4,3], Missclassification_rate_Test= round(ms_test, digits = 2))
 
+confusion_matrix_Test4 <-table(test[,65],pred_test) ## Test
+
+err_test_by_class_perc4 <- round(100*((rowSums(confusion_matrix_Test4)-diag(confusion_matrix_Test4))/
+                                       rowSums(confusion_matrix_Test4)),2)
+
+names(err_test_by_class_perc4) <- 0:9
+err_test_by_class_perc4
+
 ms_tests
 ```
 
 ### 5. Cross entropy for training data
 
-The optimal value of K is 6, because is the one with lowest cross entropy and the 
-magnitude of K is not to small to create overfitting.
+The optimal value of K is 6, because is the one with lowest cross entropy.
 Cross entropy is a better error performance metric than Misinterpretation rate
-for multiclass classification, because cross entropy deals with the total
-probability of the targets and gives a better understanding of the whole model.
-At then end the aim of using the cross entropy is to minimize the distance
-between the two probability distributions.
+for multiclass classification; Cross entropy penalize the lower probabilities
+on each observation, so it gives a better sense of how is performing your model.
+
 
 ```{r, echo=FALSE}
 ## Create a matrix to store the K and Cross entropy values
@@ -283,7 +285,8 @@ for(i in 1:30){
   ## Cross entropy calculation/ The 
   Knn_models1[i,2] <- -mean(log(Individual_prob + 1e-15))
 }
-plot(1:30, Knn_models1[,2],xlab = "K", ylab = "Cross entropy", type = "p", pch= 19,
+k<- c(1:30)
+plot(k, Knn_models1[,2],xlim = rev(range(k)),xlab = "K", ylab = "Cross entropy", type = "p", pch= 19,
      main = "Dependence of the validation error on the value of k", col= "orange")
 points(6,Knn_models1[6,2], col="blue", pch=19)
 text(4.7,0.15,label= "K=6")
