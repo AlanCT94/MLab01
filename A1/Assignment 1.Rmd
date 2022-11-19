@@ -69,7 +69,7 @@ The Misclasifiation error from training and test are similar which it indicates
 that the model is too simple, but it will not overfit.
 
 
-```{r, warning=FALSE, fig.height = 2, fig.width = 2 ,echo=FALSE}
+```{r, warning = FALSE, fig.height = 2, fig.width = 2 ,echo=FALSE}
 library(kknn)
 ## Fit model with test 
 model_1<- kknn(as.factor(V65)~.,train = train, test = test, k =30, kernel = "rectangular")
@@ -94,7 +94,7 @@ m_train1 <- (sum(train[,65]!= pred_train)/length(train[,65]))*100
 # m_test1
 # m_train1
 ```
-```{r}
+```{r, echo=FALSE}
 err_train_by_class_perc <- round(100*((rowSums(confusion_matrix_Train)-diag(confusion_matrix_Train))/
                                        rowSums(confusion_matrix_Train)),2)
 
@@ -119,7 +119,7 @@ Another detail is that the cases with highest probability have darker colors
 on the perimeter of the shape, this indicates that there is more pixels in that
 position and is easier for the model to identify.
 
-```{r,fig, fig.height = 2, fig.width = 2 ,echo=FALSE}
+```{r,fig, fig.height = 3, fig.width = 3 ,echo=FALSE}
 ## Take the rows which target is the number 8
 target_train8 <- which(as.factor(train[,65])== 8)
 target_test8 <- which(as.factor(test[,65]) == 8)
