@@ -1,0 +1,324 @@
+---
+title: "Computer Lab 1 block 1"
+author: "Kerstin(kerni714), Tugce() and Alan(alaca734)"
+date: "2022-11-16"
+output: pdf_document
+---
+
+## Assignment 1 Handwritten digit recognition with Knearest neighbors.
+
+
+### 1.1 Data set Partition
+
+The original data set **"optdigits.csv"** has a dimension of **3823 rows and 65
+columns.** The last column[65] is the target, and represent which number the each
+row is. After dividing the data set with the proportions indicated the number of 
+rows for each sub set are: **Training: 1911, Validation: 955 and Test: 957**.
+```{r,fig.align='center',fig.height = 3, fig.width = 3 , echo =FALSE}
+#------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
+#- Assignment 1
+#------------------------------------------------------------------------------#
+#------------------------------------------------------------------------------#
+
+## Import the data
+df <- read.csv(file = "optdigits.csv", header = FALSE)
+n <- dim(df)[1]
+n1<- nrow(df) # is the same as above
+
+## Train data 50%
+set.seed(12345)
+id <- sample(1:n, floor(n*0.5))# floor to take round the numbers
+train <- df[id,]
+## Validation data 25%
+id1<- setdiff(1:n, id) # select data that were not selected on the train data
+set.seed(12345)
+id2<- sample(id1, floor(n*0.25))
+validation <- df[id2,]
+
+## Test data
+id3<-setdiff(id1,id2)
+test <- df[id3,]
+
+# Plot distribution
+nt <- nrow(train)
+nv <- nrow(validation)
+nte<- nrow(test)
+
+n_data<- c(Training = nt, Validation= nv, Test =nte)
+barp<- barplot(n_data, main = "Data density", xlab = "Data set", ylab = "Number of rows",
+        col = c("red", "orange", "yellow"))
+text(barp, 0, round(n_data, 1),cex=1,pos=3)
+
+```
+
+
+
+### 1.2 Training the model (Confusion matrices and Misclasification errors)
+
+The Misclassification rate is calculated as follows:
+
+$\ MR = \frac{FP+FN}{TotalCases}$
+
+- **FP**= False Positives
+- **FN** = False Negatives
+- **FP + FN**= Incorrect Predictions
+
+$$
+R(Y,\hat{Y}) = \frac{1}{N}{\sum_{i=1}^{N}}I (Y_i\neq\hat{Y}_i)
+$$
+
+The Misclassification Rate of the Training data set is 4.50 %.
+The Misclassification Rate of the Test data set is 5.33 %.
+
+From the confusion matrices of Testing and Training data sets, we calculated the 
+prediction error for each class as the number that was erroneously classified 
+divided by the total number of observations for that class. For the Training 
+the numbers 1, 4 and 9. For the Testing the numbers 4, 5 and 8, are the ones with 
+the highest error. The error rates for the test set ranges from 0-14%, thus the 
+highest prediction error for the individual digits is almost three times as high as 
+the overall error rate.
+
+The Misclassification error from training and test are similar which indicates
+that the model might be too simple.
+
+
+```{r, warning = FALSE, fig.height = 2, fig.width = 2 ,echo=FALSE}
+library(kknn)
+## Fit model with test 
+model_1<- kknn(as.factor(V65)~.,train = train, test = test, k =30, kernel = "rectangular")
+## Fit model with train
+model_2<- kknn(as.factor(V65)~.,train = train, test = train,k=30 ,kernel = "rectangular")
+## Predicted values test
+pred_test<- model_1$fitted.values
+## Predicted values train
+pred_train <- model_2$fitted.values
+## Confusion matrix 
+confusion_matrix_Test <-table(test[,65],pred_test) ## Test
+confusion_matrix_Train <-table(train[,65],pred_train) ## Train
+confusion_matrix_Test
+confusion_matrix_Train
+# Calculate the Misclasification rate by a different method Ignore
+#m_test <- mean(test[,65] != pred_test)
+#m_train <- mean(train[,65] != pred_train)
+
+# cat("Missclasification rate is the sum of False positives + False negatives / Total predictions","\n")
+m_test1 <- (sum(test[,65] != pred_test)/length(test[,65]))*100
+m_train1 <- (sum(train[,65]!= pred_train)/length(train[,65]))*100
+# m_test1
+# m_train1
+```
+```{r, echo=FALSE}
+err_train_by_class_perc <- round(100*((rowSums(confusion_matrix_Train)-diag(confusion_matrix_Train))/
+                                       rowSums(confusion_matrix_Train)),2)
+
+names(err_train_by_class_perc) <- 0:9
+
+err_test_by_class_perc <- round(100*((rowSums(confusion_matrix_Test)-diag(confusion_matrix_Test))/
+                                       rowSums(confusion_matrix_Test)),2)
+
+names(err_test_by_class_perc) <- 0:9
+cat("Misclasification rate per class - Train", "\n")
+err_train_by_class_perc
+cat("Misclasification rate per class- Test","\n")
+err_test_by_class_perc
+
+```
+
+### 1.3 Easiest and Hardest cases for digit "8"
+
+The heatmap plot shows that the three cases with lowest probability or the hardest to predict, have shapes which the two circles of the 8 figure is not define in comparison with the easiest to predict that both circles are well defined.
+Another detail is that the cases with highest probability have darker colors
+on the perimeter of the shape, this indicates that there is more pixels in that
+position and is easier for the model to identify.
+
+```{r,echo=FALSE}
+#{r,fig, fig.height = 3, fig.width = 3 ,echo=FALSE}
+## Take the rows which target is the number 8
+target_train8 <- which(as.factor(train[,65])== 8)
+target_test8 <- which(as.factor(test[,65]) == 8)
+
+## Take the probability values of the prediction model for the number 8
+
+prob8_train <- model_2$prob[target_train8,9]#Train
+prob8_test<- model_1$prob[target_test8,9] #Test
+#We order the indexes we obtain above to take the two lowest and highest
+o<-order(prob8_train)
+## Train prob
+## Hardest
+# cat("Hardest","\n")
+# prob8_train[50]
+# prob8_train[43]
+# prob8_train[136]
+# # Easiest
+# cat("Easiest","\n")
+# prob8_train[179]
+# prob8_train[183]
+
+## Taking the row of the subset of 8's matrix which probability of being an 8 
+## is lowest and highest
+low1 <- train[target_train8[50],]
+low2 <- train[target_train8[43],]
+low3 <- train[target_train8[136],]
+high1 <- train[target_train8[179],]
+high2 <- train[target_train8[183],]
+
+## Reshaping the rows to matrix and taking the last column which is the target or
+# nlow1 <- matrix(as.numeric(low1[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+# nlow2 <- matrix(as.numeric(low2[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+# nlow3 <- matrix(as.numeric(low3[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+# nhigh1 <- matrix(as.numeric(high1[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+# nhigh2 <- matrix(as.numeric(high2[-65]), nrow = 8, ncol = 8, byrow = TRUE)
+
+##We could have used matrix and then convert the matrix to the transpose matrix
+## Or as we did it, we just set to TRUE the byrow parameter.
+## We do this to have the correct orientation on the heatmap(), otherwise we would 
+## see an infinite shape instead of the 8's.
+
+nlow1 <- matrix(as.numeric(low1[-65]), nrow = 8, ncol = 8)
+nlow2 <- matrix(as.numeric(low2[-65]), nrow = 8, ncol = 8)
+nlow3 <- matrix(as.numeric(low3[-65]), nrow = 8, ncol = 8)
+nhigh1 <- matrix(as.numeric(high1[-65]), nrow = 8, ncol = 8)
+nhigh2 <- matrix(as.numeric(high2[-65]), nrow = 8, ncol = 8)
+
+
+## Representation of the numbers 8
+par(mfrow=c(2,3))
+#cat("Hardest")
+image(nlow1, main = "Prob 0.10")
+image(nlow2, main = "Prob 0.13")
+image(nlow3, main = "Prob 0.16")
+#cat("Easiest")
+image(nhigh1, main = "Prob 1")
+image(nhigh2, main = "Prob 1")
+```
+
+### 1.4 Model Complexity
+
+The complexity of the models increases as the number of K or numbers of nearest neighbors decreases. From
+the plot it can be seen that there is a substantial difference between the models. For the training set the error decreases with increasing complexity, down to 0 for K equals 1 and 2. 
+The validation error also decreases generally until K equals 4. The Validation error then starts to increase from K equals 2.
+The optimal K is number 4 because it has the lowest Misclassification Rate and compared with K equals 3, that has the same error we choose K=4 because it has lower complexity.
+
+From the plot it can be seen that for K equal to 1 and 2, for the training data set
+resulted in a Misclassification rate equal to 0. For K equal to 1 for the training set, the model will just identify for each observation itself as the closest data point, meaning the prediction error will be 0 for the training set, and the model will highly likely lead to overfitting.
+
+
+```{r,fig.height = 4, fig.width = 6  ,echo=FALSE}
+k <- c(1:30)
+Knn_models <- matrix(0, nrow = 30, ncol = 4)
+colnames(Knn_models) <- c("K","Misclasification rate trainning %",
+                          "Misclasification rate validation %",
+                          "Misclasification rate test %" )
+for (i in k) {
+  # Adding values of K to matrix
+  Knn_models[i,1] <- i
+  # Fit knn models for training and validation data sets with different K <- 1:30
+  Knn_train<- kknn(as.factor(V65)~.,train = train, test = train, k =i,
+                      kernel = "rectangular")
+  knn_validation <- kknn(as.factor(V65)~.,train = train, test = validation,
+                         k =i, kernel = "rectangular")
+  # Extracting predicted values from the fitted models
+  pred_train <- Knn_train$fitted.values
+  pred_validation <- knn_validation$fitted.values
+  
+  # Calculating the Misclacsifications rates
+  ms_train <- (mean(train[,65] != pred_train))*100
+  ms_validation <- (mean(validation[,65] != pred_validation))*100
+ 
+  # Adding Classifications rates % to the matrix
+  Knn_models[i,2] <- ms_train
+  Knn_models[i,3] <- ms_validation
+  #Knn_models[i,4] <- ms_test
+}
+
+plot(k, Knn_models[,2], xlim = rev(range(k)), ylim = c(0,6), col="red", type = "p", 
+     main = "Misclassification error vs K", ylab = "Error %", pch=19)
+points(k,Knn_models[,3], col="blue", pch=19)
+points(30,Knn_models[30,2], col = "red", pch = 19)
+text(30,4,label= round(Knn_models[30,2], digits = 3))
+points(30,Knn_models[30,3], col= "blue", pch = 19)
+text(30,5.7,label= round(Knn_models[30,3], digits = 3))
+legend('bottomleft',inset=0.05,c("Train","Validation"),lty=1,col=c("red",
+                                    "blue"),title="Data")
+```
+
+#### 1.4.1 Misclassification error with Test data set, with optimal K \
+
+The  overall Misclassification error of the test data has a similar value to the model
+with the validation data, around 2.5%, which is now higher than for training dataset (error 1.4%).
+Looking at the error rates per class, we can see that the highest error is 5.5%, which
+might be thought of as a good model (but it also depends on the application).
+
+```{r, echo=FALSE}
+knn_test <- kknn(as.factor(V65)~.,train = train, test = test,
+                         k =4, kernel = "rectangular")
+pred_test <- knn_test$fitted.values
+ms_test <- (mean(test[,65] != pred_test))*100
+
+#pred_test
+options(digits=4)
+ms_tests <- c(round(Knn_models[4,2], digits=2),Knn_models[4,3], Missclassification_rate_Test= round(ms_test, digits = 2))
+
+confusion_matrix_Test4 <-table(test[,65],pred_test) ## Test
+
+err_test_by_class_perc4 <- round(100*((rowSums(confusion_matrix_Test4)-diag(confusion_matrix_Test4))/
+                                       rowSums(confusion_matrix_Test4)),2)
+
+names(err_test_by_class_perc4) <- 0:9
+
+ms_tests
+
+cat("By class error rates:")
+err_test_by_class_perc4
+```
+
+### 5. Cross entropy for training data
+
+The optimal value of K is 6, because it is the one with lowest cross entropy.
+Cross entropy is a better error performance metric than Misinterpretation rate
+for multiclass classification; Cross entropy penalize the lower probabilities
+on each observation for the targets more (penalizes higher loss to predictions), so it gives a better sense of how is performing your model.
+
+
+```{r, echo=FALSE}
+## Create a matrix to store the K and Cross entropy values
+Knn_models1 <- matrix(0, nrow = 30, ncol = 2)
+colnames(Knn_models1) <- c("K","CE")
+## Vector to store the probability of the actual target
+Individual_prob <- c()
+for(i in 1:30){
+  ## Store the K value
+  Knn_models1[i,1]<-i
+  ## Fitting the models
+  knn_validation <- kknn(as.factor(V65)~.,train = train, test = validation,
+                         k =i, kernel = "rectangular")
+  # Probability matrix
+  knn_validation$prob
+ 
+   ## Taking probabilities for the value(number) that is supposed to be 
+  ## Y[target]-column 65 of dataset partition
+  for(j in 1:nrow(knn_validation$prob)){
+    ## If the Y[target] is 8, we took the prob of being 8 of the current[i] row
+    Individual_prob[j] <- knn_validation$prob[j,validation[j,65]+1]
+    }
+  ## Cross entropy calculation/ The 
+  Knn_models1[i,2] <- -mean(log(Individual_prob + 1e-15))
+}
+k<- c(1:30)
+plot(k, Knn_models1[,2],xlim = rev(range(k)),xlab = "K", ylab = "Cross entropy", type = "p", pch= 19,
+     main = "Dependence of the validation error on the value of k", col= "orange")
+points(6,Knn_models1[6,2], col="blue", pch=19)
+text(4.7,0.15,label= "K=6")
+legend('topright',inset=0.05,c("K"),lty =1,col=c(
+                                    "blue"),title="Optimal K")
+```
+
+
+# *Statement of Contribution*
+
+Assignment 1 was contributed by Alan Cacique.
+Assignment 2 was contributed by Tugce Izci.
+Assignment 3 was contributed by Kerstin Nilsson.
+All three assignments procedures and results were review and discussed before 
+the creation of the final report. 
